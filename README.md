@@ -55,3 +55,21 @@ Les bibliothèques qui proposent un système complet, sûr par défaut et simple
 
 
 
+
+
+## Réponses aux Questions
+
+### Question 4: Quel est le but de `cryptography.fernet` ?
+**Réponse:** `cryptography.fernet` est une implémentation de Fernet, un schéma d'encryption symétrique qui utilise des clés basées sur HMAC. Il fournit un moyen simple et sûr de chiffrer et de déchiffrer des messages ou des fichiers. Il est conçu pour être "opinionated", c'est-à-dire qu'il gère les meilleures pratiques cryptographiques pour l'utilisateur, incluant l'utilisation de IV (Initialization Vectors) et de HMAC (Keyed-Hash Message Authentication Code) pour garantir l'intégrité et la confidentialité des données.
+
+### Question 5: Que se passe-t-il si on modifie un octet du fichier chiffré ?
+**Réponse:** Si un octet du fichier chiffré par Fernet est modifié, le processus de déchiffrement échouera. Fernet inclut un HMAC (Hash-based Message Authentication Code) dans le token chiffré. Ce HMAC est calculé sur les données chiffrées (y compris l'IV et le texte chiffré). Lors du déchiffrement, le HMAC est recalculé et comparé à celui inclus dans le token. Si un seul octet des données chiffrées est altéré, les HMAC ne correspondront pas, indiquant une altération du message. Cela déclenchera une erreur `cryptography.fernet.InvalidToken` ou similaire, protégeant ainsi l'intégrité des données et empêchant le déchiffrement de données corrompues ou falsifiées.
+
+### Question 6: Pourquoi ne faut-il pas commiter la clé dans Git ?
+**Réponse:** Il ne faut jamais commiter de clés de chiffrement (ou toute autre information sensible comme des mots de passe, des API keys, etc.) dans un dépôt Git pour plusieurs raisons critiques :
+1.  **Sécurité**: Une fois une clé poussée sur un dépôt (surtout public), elle est potentiellement accessible à quiconque ayant accès au dépôt, compromettant la sécurité des données chiffrées avec cette clé. Même si la clé est retirée ultérieurement de l'historique visible, elle peut toujours exister dans l'historique du dépôt.
+2.  **Rotation des Clés**: Les clés doivent être régulièrement renouvelées (rotées). Si une clé est "hardcodée" et versionnée, la rotation devient difficile et risque de casser des applications dépendantes de cette clé.
+3.  **Environnements Multiples**: Différents environnements (développement, test, production) devraient utiliser des clés distinctes. Commiter une clé force son utilisation dans tous les environnements, augmentant le risque de compromission générale.
+4.  **Conformité**: De nombreuses normes de sécurité et réglementations (ex: GDPR, HIPAA) exigent que les clés de chiffrement soient gérées de manière sécurisée et ne soient pas exposées dans le code source.
+
+Les clés doivent être gérées via des mécanismes sécurisés comme les variables d'environnement, les secrets managers (Vault, AWS Secrets Manager, Google Secret Manager), ou des fichiers de configuration spécifiques non versionnés (.env).
